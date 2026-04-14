@@ -1,0 +1,41 @@
+name: BSR Monitor
+
+on:
+  schedule:
+    # Meia-noite horário de Brasília (UTC-3) = 03:00 UTC
+    - cron: "0 3 * * *"
+    # 10h da manhã horário de Brasília (UTC-3) = 13:00 UTC
+    - cron: "0 13 * * *"
+  workflow_dispatch: # permite rodar manualmente pelo GitHub
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  scrape-and-publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Instalar dependências
+        run: pip install requests beautifulsoup4
+
+      - name: Rodar scraper
+        run: python scraper.py
+
+      - name: Salvar histórico e publicar site
+        run: |
+          git config user.name  "BSR Bot"
+          git config user.email "bot@bsr-monitor"
+          git add data/history.json index.html
+          git diff --cached --quiet || git commit -m "BSR update $(date -u '+%Y-%m-%d %H:%M UTC')"
+          git push
