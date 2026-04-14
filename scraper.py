@@ -25,18 +25,15 @@ def fetch_bsr(url):
         resp = session.get(url, headers=HEADERS, timeout=20, allow_redirects=True)
         soup = BeautifulSoup(resp.text, "html.parser")
 
-        # Titulo do produto
         title_tag = soup.select_one("#productTitle")
         title = title_tag.get_text(strip=True) if title_tag else "Sem titulo"
 
         bsr = None
 
-        # Procura a linha exata de "Ranking dos mais vendidos" na pagina
         for tag in soup.find_all(["td", "th", "span", "li"]):
             texto = tag.get_text(" ", strip=True)
             if "Ranking dos mais vendidos" in texto or "mais vendidos" in texto.lower():
-                # Pega o numero que vem logo apos "No" ou "N\u00ba"
-                m = re.search(r'N[oO\u00ba\u00b0]\s*\.?\s*([\d.]+)', texto)
+                m = re.search(r'N[oOº°]\s*\.?\s*([\d.]+)', texto)
                 if m:
                     bsr = int(m.group(1).replace(".", ""))
                     break
@@ -108,4 +105,97 @@ def generate_html(history):
             b = e.get("bsr")
             ts = e.get("timestamp", "")
             b_str = "#" + f"{b:,}".replace(",", ".") if b else "N/D"
-            rows += f"<tr><td>{ts}</td><td>{b
+            rows += f"<tr><td>{ts}</td><td>{b_str}</td></tr>"
+
+        cards_html += f"""
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="product-label">{label}</div>
+              <div class="product-title">{title}</div>
+            </div>
+            {trend}
+          </div>
+          <div class="bsr-value">{bsr_display}</div>
+          {sparkline}
+          <details>
+            <summary>Ver historico ({len(entries)} registros)</summary>
+            <table class="history-table">
+              <thead><tr><th>Data/Hora</th><th>BSR</th></tr></thead>
+              <tbody>{rows}</tbody>
+            </table>
+          </details>
+          <a class="product-link" href="{latest.get('url', '#')}" target="_blank">Ver na Amazon &#8599;</a>
+        </div>"""
+
+    html = f"""<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>BSR Monitor</title>
+  <style>
+    *{{box-sizing:border-box;margin:0;padding:0}}
+    body{{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#0f1117;color:#e0e0e0;min-height:100vh;padding:24px 16px}}
+    header{{text-align:center;margin-bottom:32px}}
+    header h1{{font-size:1.8rem;color:#f90;letter-spacing:1px}}
+    header p{{font-size:.85rem;color:#888;margin-top:6px}}
+    .grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px;max-width:1100px;margin:0 auto}}
+    .card{{background:#1a1d27;border:1px solid #2a2d3a;border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:12px}}
+    .card-header{{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}}
+    .product-label{{font-size:.72rem;text-transform:uppercase;color:#f90;letter-spacing:1px;font-weight:600}}
+    .product-title{{font-size:.9rem;color:#ccc;margin-top:4px;line-height:1.3}}
+    .bsr-value{{font-size:2.4rem;font-weight:700;color:#fff;letter-spacing:-1px}}
+    .trend{{font-size:.78rem;padding:4px 10px;border-radius:20px;white-space:nowrap;font-weight:600}}
+    .trend.up{{background:#0d2e1a;color:#4caf50}}
+    .trend.down{{background:#2e1010;color:#f44336}}
+    .trend.flat{{background:#1e1e2e;color:#888}}
+    .sparkline{{width:100%;height:65px}}
+    details summary{{font-size:.8rem;color:#888;cursor:pointer;user-select:none}}
+    .history-table{{width:100%;border-collapse:collapse;margin-top:10px;font-size:.8rem}}
+    .history-table th,.history-table td{{padding:5px 8px;text-align:left;border-bottom:1px solid #2a2d3a}}
+    .history-table th{{color:#888;font-weight:500}}
+    .product-link{{display:inline-block;font-size:.78rem;color:#f90;text-decoration:none;margin-top:4px}}
+    .product-link:hover{{text-decoration:underline}}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>&#128230; BSR Monitor</h1>
+    <p>Ultima atualizacao: {now_str} &middot; Atualiza as 10h e meia-noite (UTC-3)</p>
+  </header>
+  <div class="grid">{cards_html}</div>
+</body>
+</html>"""
+
+    with open(OUTPUT_HTML, "w", encoding="utf-8") as f:
+        f.write(html)
+    print(f"HTML gerado: {OUTPUT_HTML}")
+
+
+def main():
+    history = load_history()
+    timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M")
+
+    for product in PRODUCTS:
+        url = product["url"]
+        print(f"Buscando: {url}")
+        result = fetch_bsr(url)
+        result["timestamp"] = timestamp
+        result["label"] = product["label"]
+
+        if url not in history:
+            history[url] = []
+        history[url].append(result)
+
+        bsr = result.get("bsr")
+        print(f"   -> {result['title']} | BSR: {'#' + str(bsr) if bsr else 'nao encontrado'}")
+        time.sleep(random.uniform(4, 8))
+
+    save_history(history)
+    generate_html(history)
+    print("Concluido!")
+
+
+if __name__ == "__main__":
+    main()
