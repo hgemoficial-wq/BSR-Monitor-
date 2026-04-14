@@ -34,7 +34,7 @@ jobs:
         run: |
           git config user.name "BSR Bot"
           git config user.email "bot@bsr-monitor"
-          git pull --rebase origin principal
           git add data/history.json index.html
           git diff --cached --quiet || git commit -m "BSR update"
-          git push
+          git pull --rebase origin principal
+          git push origin principal
