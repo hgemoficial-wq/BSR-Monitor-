@@ -28,12 +28,12 @@ jobs:
         run: pip install requests beautifulsoup4
 
       - name: Rodar scraper
-        run: python scraper.py
 
       - name: Salvar e publicar
         run: |
           git config user.name "BSR Bot"
           git config user.email "bot@bsr-monitor"
+          git pull --rebase
           git add data/history.json index.html
           git diff --cached --quiet || git commit -m "BSR update"
           git push
