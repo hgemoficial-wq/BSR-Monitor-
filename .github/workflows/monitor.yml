@@ -36,5 +36,4 @@ jobs:
           git config user.email "bot@bsr-monitor"
           git add data/history.json index.html
           git diff --cached --quiet || git commit -m "BSR update"
-          git pull --rebase origin principal
-          git push origin principal
+          git push origin HEAD
