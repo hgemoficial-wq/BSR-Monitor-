@@ -1,7 +1,6 @@
-import requests
-from bs4 import BeautifulSoup
 import json, os, re, time, random
 from datetime import datetime
+from playwright.sync_api import sync_playwright
 
 PRODUCTS = [
     {"url": "https://a.co/d/02h6RhMB", "label": "Produto 1"},
@@ -12,36 +11,27 @@ PRODUCTS = [
 HISTORY_FILE = "data/history.json"
 OUTPUT_HTML = "index.html"
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
-    "Accept-Language": "pt-BR,pt;q=0.9",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Connection": "keep-alive",
-}
 
-
-def fetch_bsr(url):
+def fetch_bsr(url, page):
     try:
-        session = requests.Session()
-        resp = session.get(url, headers=HEADERS, timeout=20, allow_redirects=True)
-        html = resp.text
-        soup = BeautifulSoup(html, "html.parser")
+        page.goto(url, wait_until="domcontentloaded", timeout=30000)
+        time.sleep(random.uniform(2, 4))
+
+        html = page.content()
+        final_url = page.url
 
         # Titulo
-        title_tag = soup.select_one("#productTitle")
-        title = title_tag.get_text(strip=True) if title_tag else "Sem titulo"
+        try:
+            title = page.locator("#productTitle").inner_text(timeout=5000).strip()
+        except:
+            title = "Sem titulo"
 
         bsr = None
 
-        # Pega todo o texto visivel da pagina e busca padrao de BSR brasileiro
-        # Formato: "No 272 em Cozinha" ou "N 14 em Potes"
-        full_text = soup.get_text(" ")
-        
-        # Busca todos os padroes "N? [numero] em [categoria]"
+        # Busca "No [numero] em [categoria]" no texto completo da pagina
+        full_text = page.inner_text("body")
         matches = re.findall(r'N[^\w]?\s*(\d[\d.]*)\s+em\s+\w', full_text)
         if matches:
-            # Pega o menor numero (BSR mais relevante = menor numero = melhor posicao)
             numeros = []
             for m in matches:
                 try:
@@ -51,27 +41,14 @@ def fetch_bsr(url):
             if numeros:
                 bsr = min(numeros)
 
-        # Fallback: busca direto no HTML bruto por padrao JSON de salesRank
+        # Fallback: busca no HTML
         if not bsr:
             m = re.search(r'"salesRank[^"]*"[^:]*:\s*(\d+)', html)
             if m:
                 bsr = int(m.group(1))
 
-        # Fallback: busca "#[numero]" perto de palavras de ranking
-        if not bsr:
-            ranking_section = re.search(
-                r'(mais.vendidos|bestseller|best.seller|ranking).{0,200}#\s*([\d.,]+)',
-                html, re.IGNORECASE | re.DOTALL
-            )
-            if ranking_section:
-                num = ranking_section.group(2).replace(".", "").replace(",", "")
-                try:
-                    bsr = int(num)
-                except:
-                    pass
-
         return {
-            "url": resp.url,
+            "url": final_url,
             "title": title[:60] + ("..." if len(title) > 60 else ""),
             "bsr": bsr,
             "error": None,
@@ -209,20 +186,30 @@ def main():
     history = load_history()
     timestamp = datetime.utcnow().strftime("%d/%m/%Y %H:%M")
 
-    for product in PRODUCTS:
-        url = product["url"]
-        print(f"Buscando: {url}")
-        result = fetch_bsr(url)
-        result["timestamp"] = timestamp
-        result["label"] = product["label"]
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            locale="pt-BR",
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
+        )
+        page = context.new_page()
 
-        if url not in history:
-            history[url] = []
-        history[url].append(result)
+        for product in PRODUCTS:
+            url = product["url"]
+            print(f"Buscando: {url}")
+            result = fetch_bsr(url, page)
+            result["timestamp"] = timestamp
+            result["label"] = product["label"]
 
-        bsr = result.get("bsr")
-        print(f"   -> {result['title']} | BSR: {'#' + str(bsr) if bsr else 'nao encontrado'}")
-        time.sleep(random.uniform(4, 8))
+            if url not in history:
+                history[url] = []
+            history[url].append(result)
+
+            bsr = result.get("bsr")
+            print(f"   -> {result['title']} | BSR: {'#' + str(bsr) if bsr else 'nao encontrado'}")
+            time.sleep(random.uniform(3, 6))
+
+        browser.close()
 
     save_history(history)
     generate_html(history)
