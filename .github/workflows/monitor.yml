@@ -28,6 +28,7 @@ jobs:
         run: pip install requests beautifulsoup4
 
       - name: Rodar scraper
+        run: python scraper.py
 
       - name: Salvar e publicar
         run: |
