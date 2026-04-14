@@ -16,6 +16,8 @@ HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36",
     "Accept-Language": "pt-BR,pt;q=0.9",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "Connection": "keep-alive",
 }
 
 
@@ -23,20 +25,50 @@ def fetch_bsr(url):
     try:
         session = requests.Session()
         resp = session.get(url, headers=HEADERS, timeout=20, allow_redirects=True)
-        soup = BeautifulSoup(resp.text, "html.parser")
+        html = resp.text
+        soup = BeautifulSoup(html, "html.parser")
 
+        # Titulo
         title_tag = soup.select_one("#productTitle")
         title = title_tag.get_text(strip=True) if title_tag else "Sem titulo"
 
         bsr = None
 
-        for tag in soup.find_all(["td", "th", "span", "li"]):
-            texto = tag.get_text(" ", strip=True)
-            if "Ranking dos mais vendidos" in texto or "mais vendidos" in texto.lower():
-                m = re.search(r'N[oOº°]\s*\.?\s*([\d.]+)', texto)
-                if m:
-                    bsr = int(m.group(1).replace(".", ""))
-                    break
+        # Pega todo o texto visivel da pagina e busca padrao de BSR brasileiro
+        # Formato: "No 272 em Cozinha" ou "N 14 em Potes"
+        full_text = soup.get_text(" ")
+        
+        # Busca todos os padroes "N? [numero] em [categoria]"
+        matches = re.findall(r'N[^\w]?\s*(\d[\d.]*)\s+em\s+\w', full_text)
+        if matches:
+            # Pega o menor numero (BSR mais relevante = menor numero = melhor posicao)
+            numeros = []
+            for m in matches:
+                try:
+                    numeros.append(int(m.replace(".", "")))
+                except:
+                    pass
+            if numeros:
+                bsr = min(numeros)
+
+        # Fallback: busca direto no HTML bruto por padrao JSON de salesRank
+        if not bsr:
+            m = re.search(r'"salesRank[^"]*"[^:]*:\s*(\d+)', html)
+            if m:
+                bsr = int(m.group(1))
+
+        # Fallback: busca "#[numero]" perto de palavras de ranking
+        if not bsr:
+            ranking_section = re.search(
+                r'(mais.vendidos|bestseller|best.seller|ranking).{0,200}#\s*([\d.,]+)',
+                html, re.IGNORECASE | re.DOTALL
+            )
+            if ranking_section:
+                num = ranking_section.group(2).replace(".", "").replace(",", "")
+                try:
+                    bsr = int(num)
+                except:
+                    pass
 
         return {
             "url": resp.url,
