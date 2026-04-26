@@ -231,6 +231,14 @@
       "error": null,
       "timestamp": "26/04/2026 08:08",
       "label": "Produto 1"
+    },
+    {
+      "url": "https://www.amazon.com.br/dp/B0G8VFCCVG?ref=cm_sw_r_cso_cp_apan_dp_1SN6G7DR3R2H5BHZ45XK&ref_=cm_sw_r_cso_cp_apan_dp_1SN6G7DR3R2H5BHZ45XK&social_share=cm_sw_r_cso_cp_apan_dp_1SN6G7DR3R2H5BHZ45XK",
+      "title": "Sem titulo",
+      "bsr": null,
+      "error": null,
+      "timestamp": "26/04/2026 15:29",
+      "label": "Produto 1"
     }
   ],
   "https://a.co/d/0hltnajZ": [
@@ -465,6 +473,14 @@
       "error": null,
       "timestamp": "26/04/2026 08:08",
       "label": "Produto 2"
+    },
+    {
+      "url": "https://www.amazon.com.br/dp/B0F4LKYZVZ?ref=cm_sw_r_cso_cp_apan_dp_PHYG87M68Y78VV4KS0X5&ref_=cm_sw_r_cso_cp_apan_dp_PHYG87M68Y78VV4KS0X5&social_share=cm_sw_r_cso_cp_apan_dp_PHYG87M68Y78VV4KS0X5",
+      "title": "Sem titulo",
+      "bsr": null,
+      "error": null,
+      "timestamp": "26/04/2026 15:29",
+      "label": "Produto 2"
     }
   ],
   "https://a.co/d/09rtQ6Ee": [
@@ -698,6 +714,14 @@
       "bsr": null,
       "error": null,
       "timestamp": "26/04/2026 08:08",
+      "label": "Produto 3"
+    },
+    {
+      "url": "https://www.amazon.com.br/dp/B0GSXBNNHG?ref=cm_sw_r_cso_cp_apan_dp_GK0B5KW8G92BGFMCNFX5&ref_=cm_sw_r_cso_cp_apan_dp_GK0B5KW8G92BGFMCNFX5&social_share=cm_sw_r_cso_cp_apan_dp_GK0B5KW8G92BGFMCNFX5",
+      "title": "Processador Manual de Alimentos com Puxador, 500ml, Sistema ...",
+      "bsr": null,
+      "error": null,
+      "timestamp": "26/04/2026 15:29",
       "label": "Produto 3"
     }
   ]
