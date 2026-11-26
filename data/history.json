@@ -3631,6 +3631,14 @@
       "error": null,
       "timestamp": "25/11/2026 22:19",
       "label": "Produto 1"
+    },
+    {
+      "url": "https://www.amazon.com.br/error/500",
+      "title": "Sem titulo",
+      "bsr": null,
+      "error": null,
+      "timestamp": "26/11/2026 12:01",
+      "label": "Produto 1"
     }
   ],
   "https://a.co/d/0hltnajZ": [
@@ -7265,6 +7273,14 @@
       "error": null,
       "timestamp": "25/11/2026 22:19",
       "label": "Produto 2"
+    },
+    {
+      "url": "https://www.amazon.com.br/dp/B0F4LKYZVZ?lv=shuf&social_share=cm_sw_r_cso_cp_apan_dp_PHYG87M68Y78VV4KS0X5&channelId=704&ref_=cm_sw_r_cso_cp_apan_dp_PHYG87M68Y78VV4KS0X5&plpRedirect=mhFallback",
+      "title": "Colher de Pau Madeira Maciça Kit Conjunto com 3 Unidades",
+      "bsr": null,
+      "error": null,
+      "timestamp": "26/11/2026 12:01",
+      "label": "Produto 2"
     }
   ],
   "https://a.co/d/09rtQ6Ee": [
@@ -10898,6 +10914,14 @@
       "bsr": null,
       "error": null,
       "timestamp": "25/11/2026 22:19",
+      "label": "Produto 3"
+    },
+    {
+      "url": "https://www.amazon.com.br/dp/B0GSXBNNHG?lv=shuf&social_share=cm_sw_r_cso_cp_apan_dp_GK0B5KW8G92BGFMCNFX5&channelId=704&ref_=cm_sw_r_cso_cp_apan_dp_GK0B5KW8G92BGFMCNFX5&plpRedirect=mhFallback",
+      "title": "Processador Manual de Alimentos com Puxador, 500ml, Sistema ...",
+      "bsr": null,
+      "error": null,
+      "timestamp": "26/11/2026 12:01",
       "label": "Produto 3"
     }
   ]
